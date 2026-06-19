@@ -1,0 +1,30 @@
+# Place in: /etc/containers/systemd/   (system)
+#        or: ~/.config/containers/systemd/  (user, rootless)
+# Then run: systemctl daemon-reload
+#           systemctl start uftp-fpv-receiver
+
+[Unit]
+Description=UFTP Receiver — accepts incoming camera frames from drone/client
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/aeronext/uftp-fpv-receiver:latest
+
+# Host networking so UFTP multicast/unicast UDP 1044 is reachable
+Network=host
+
+# Shared named volume with the web viewer
+Volume=fpv-images.volume:/data/images:z
+
+Environment=DEST_DIR=/data/images
+Environment=UFTP_PORT=1044
+# Keep the 500 most recent images; older ones are pruned automatically
+Environment=MAX_IMAGES=500
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,29 @@
+# Place in: /etc/containers/systemd/   (system)
+#        or: ~/.config/containers/systemd/  (user, rootless)
+# Then run: systemctl daemon-reload
+#           systemctl start uftp-fpv-web
+# Access:   http://localhost:5000
+
+[Unit]
+Description=FPV Web Viewer — displays latest camera frame with timestamp
+After=network-online.target uftp-fpv-receiver.service
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/aeronext/uftp-fpv-web:latest
+
+# Same named volume as the receiver so images are shared
+Volume=fpv-images.volume:/data/images:z,ro
+
+PublishPort=5000:5000
+
+Environment=IMAGE_DIR=/data/images
+Environment=MAX_HISTORY=20
+Environment=PORT=5000
+
+[Service]
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPV Camera Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    header h1 { font-size: 1.2rem; color: #00e676; letter-spacing: 0.1em; }
+    #dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #555; flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    #dot.live { background: #00e676; box-shadow: 0 0 6px #00e676; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 16px;
+    }
+    @media (max-width: 700px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .viewer-card {
+      background: #161616;
+      border: 1px solid #252525;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .viewer-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 200px;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .meta {
+      padding: 10px 14px;
+      border-top: 1px solid #252525;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .meta .timestamp {
+      font-size: 1rem;
+      color: #00e676;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+    .meta .status { font-size: 0.75rem; color: #666; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 12px; }
+
+    .stats-card {
+      background: #161616;
+      border: 1px solid #252525;
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .stats-card h2 { font-size: 0.8rem; color: #888; margin-bottom: 10px; letter-spacing: 0.1em; }
+    .stat-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
+    .stat-row .val { color: #00e676; }
+
+    .history-card {
+      background: #161616;
+      border: 1px solid #252525;
+      border-radius: 6px;
+      padding: 14px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .history-card h2 { font-size: 0.8rem; color: #888; margin-bottom: 10px; letter-spacing: 0.1em; }
+    .history-list { list-style: none; }
+    .history-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid #1e1e1e;
+      font-size: 0.78rem;
+      color: #aaa;
+      cursor: pointer;
+      transition: color 0.15s;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-list li:hover { color: #00e676; }
+    .history-list li:last-child { border-bottom: none; }
+
+    #no-image {
+      display: flex; align-items: center; justify-content: center;
+      height: 300px; color: #444; font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="dot"></div>
+    <h1>FPV CAMERA VIEWER</h1>
+  </header>
+
+  <div class="main-grid">
+    <div class="viewer-card">
+      {% if latest %}
+        <img id="main-img" src="/images/{{ latest.filename }}" alt="Latest frame">
+        <div class="meta">
+          <span class="timestamp" id="ts-display">{{ latest.display }}</span>
+          <span class="status" id="status-line">読み込み中...</span>
+        </div>
+      {% else %}
+        <div id="no-image">画像を待機中...</div>
+        <div class="meta">
+          <span class="timestamp" id="ts-display">--</span>
+          <span class="status" id="status-line">受信待機中</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="sidebar">
+      <div class="stats-card">
+        <h2>STATS</h2>
+        <div class="stat-row"><span>総画像数</span><span class="val" id="total-count">--</span></div>
+        <div class="stat-row"><span>更新間隔</span><span class="val" id="refresh-rate">1s</span></div>
+        <div class="stat-row"><span>ページ更新</span><span class="val" id="update-count">0</span></div>
+      </div>
+
+      <div class="history-card">
+        <h2>RECENT FRAMES</h2>
+        <ul class="history-list" id="history-list">
+          {% for img in history %}
+            <li onclick="showImage('{{ img.filename }}', '{{ img.display }}')" title="{{ img.filename }}">
+              {{ img.display }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let updateCount = 0;
+    let currentFile = {{ ("'" + latest.filename + "'") if latest else "null" }};
+
+    function showImage(filename, display) {
+      const img = document.getElementById('main-img');
+      if (img) {
+        img.src = '/images/' + filename + '?t=' + Date.now();
+        document.getElementById('ts-display').textContent = display;
+        currentFile = filename;
+      }
+    }
+
+    function poll() {
+      fetch('/api/latest')
+        .then(r => r.json())
+        .then(data => {
+          const dot = document.getElementById('dot');
+          if (data.filename) {
+            dot.className = 'live';
+
+            // Only swap image if it's newer than what we're showing
+            if (data.filename !== currentFile) {
+              let img = document.getElementById('main-img');
+              if (!img) {
+                // First image: replace the no-image div
+                const card = document.querySelector('.viewer-card');
+                const noImg = document.getElementById('no-image');
+                if (noImg) noImg.remove();
+                img = document.createElement('img');
+                img.id = 'main-img';
+                img.alt = 'Latest frame';
+                card.insertBefore(img, card.querySelector('.meta'));
+              }
+              img.src = '/images/' + data.filename + '?t=' + Date.now();
+              currentFile = data.filename;
+            }
+
+            document.getElementById('ts-display').textContent = data.datetime || '--';
+            document.getElementById('total-count').textContent = data.total;
+          } else {
+            dot.className = '';
+          }
+
+          updateCount++;
+          document.getElementById('update-count').textContent = updateCount;
+          document.getElementById('status-line').textContent =
+            '最終確認: ' + new Date().toLocaleTimeString('ja-JP');
+        })
+        .catch(() => {
+          document.getElementById('dot').className = '';
+          document.getElementById('status-line').textContent = '接続エラー';
+        });
+    }
+
+    setInterval(poll, 1000);
+    poll();
+  </script>
+</body>
+</html>

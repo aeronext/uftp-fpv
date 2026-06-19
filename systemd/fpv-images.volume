@@ -1,0 +1,5 @@
+# Named volume shared between uftp-fpv-receiver and uftp-fpv-web
+# Place alongside the .container files in the same systemd directory.
+
+[Volume]
+Label=app=uftp-fpv

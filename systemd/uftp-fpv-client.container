@@ -1,0 +1,34 @@
+# Place in: /etc/containers/systemd/   (system)
+#        or: ~/.config/containers/systemd/  (user, rootless)
+# Then run: systemctl daemon-reload
+#           systemctl start uftp-fpv-client
+
+[Unit]
+Description=FPV Camera Client — captures frames and sends via UFTP
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/aeronext/uftp-fpv-client:latest
+
+# Camera device passthrough
+AddDevice=/dev/video0
+
+# Network (host mode ensures UDP can reach the receiver directly)
+Network=host
+
+# Runtime settings — edit to match your environment
+Environment=UFTP_SERVER=192.168.1.100
+Environment=FPS=2
+Environment=CAMERA_INDEX=0
+Environment=JPEG_QUALITY=80
+# Environment=UFTP_OPTS=-E 101   # uncomment to enable UFTP encryption
+
+# Restart on failure, not on success (i.e. SIGTERM on stop is intentional)
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+[Install]
+WantedBy=default.target

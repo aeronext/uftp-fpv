@@ -1,0 +1,28 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        uftp \
+        python3 \
+        python3-pip \
+        python3-venv \
+        libglib2.0-0 \
+        libgl1 \
+        v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
+
+COPY capture.py .
+
+ENV UFTP_SERVER=192.168.1.100 \
+    FPS=1 \
+    CAMERA_INDEX=0 \
+    JPEG_QUALITY=85 \
+    UFTP_OPTS=""
+
+CMD ["python3", "-u", "capture.py"]

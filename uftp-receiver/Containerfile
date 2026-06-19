@@ -1,0 +1,23 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        uftp \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /data/images /var/log
+
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+ENV DEST_DIR=/data/images \
+    LOG_FILE=/var/log/uftpd.log \
+    UFTP_PORT=1044 \
+    MAX_IMAGES=500
+
+EXPOSE 1044/udp
+
+VOLUME ["/data/images"]
+
+CMD ["/usr/local/bin/start.sh"]
