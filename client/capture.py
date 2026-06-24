@@ -44,13 +44,12 @@ def main():
         print(f'Cannot open camera index {CAMERA_INDEX}', file=sys.stderr)
         sys.exit(1)
 
-    if CAPTURE_WIDTH and CAPTURE_HEIGHT:
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
-
-    actual_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    actual_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    print(f'Camera opened. Resolution: {actual_w}x{actual_h}, '
+    native_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    native_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    save_w = CAPTURE_WIDTH  or native_w
+    save_h = CAPTURE_HEIGHT or native_h
+    print(f'Camera opened. Native: {native_w}x{native_h}, '
+          f'Save: {save_w}x{save_h}, '
           f'Sending to {UFTP_SERVER} at {FPS} FPS', flush=True)
     interval = 1.0 / FPS
 
@@ -62,6 +61,9 @@ def main():
             print('Failed to read frame, retrying...', file=sys.stderr)
             time.sleep(1)
             continue
+
+        if save_w != native_w or save_h != native_h:
+            frame = cv2.resize(frame, (save_w, save_h), interpolation=cv2.INTER_AREA)
 
         # Filename encodes UTC timestamp for chronological sorting
         ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
