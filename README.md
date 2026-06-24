@@ -121,6 +121,79 @@ gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
 "
 ```
 
+## クライアントのセットアップ（Jetson / Raspberry Pi）
+
+ドローン側のデバイスで `uftp-fpv-client` を動作させます。
+GHCRのイメージはlinux/arm64対応済みのためそのまま利用できます。
+
+### 前提条件
+
+- カメラが `/dev/video0` として認識されていること（要確認: `ls /dev/video*`）
+- GCE VMの外部IPアドレスが確認済みであること
+
+### 1. Podmanのインストール
+
+**Raspberry Pi OS (Bookworm) / Ubuntu 22.04以降（Jetson JetPack 6.x含む）**
+
+```bash
+sudo apt-get update && sudo apt-get install -y podman
+```
+
+**Jetson JetPack 5.x（Ubuntu 20.04ベース）**
+
+```bash
+. /etc/os-release
+echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" \
+  | sudo tee /etc/apt/sources.list.d/kubic-libcontainers.list
+curl -fsSL "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" \
+  | sudo apt-key add -
+sudo apt-get update && sudo apt-get install -y podman
+```
+
+### 2. Quadletファイルのコピー
+
+開発マシンのプロジェクトルートからデバイスにコピーします：
+
+```bash
+scp systemd/uftp-fpv-client.container <user>@<device-ip>:/tmp/
+```
+
+### 3. UFTP_SERVERを設定
+
+デバイス上でGCE VMの外部IPに書き換えます：
+
+```bash
+sudo sed -i 's/UFTP_SERVER=192.168.1.100/UFTP_SERVER=<GCE外部IP>/' \
+  /tmp/uftp-fpv-client.container
+```
+
+### 4. ファイルを配置してサービスを起動
+
+```bash
+sudo mkdir -p /etc/containers/systemd
+sudo mv /tmp/uftp-fpv-client.container /etc/containers/systemd/
+sudo systemctl daemon-reload
+sudo systemctl start uftp-fpv-client
+```
+
+### ログ確認
+
+```bash
+sudo journalctl -u uftp-fpv-client -f
+sudo podman ps
+```
+
+### カメラデバイスについて
+
+| デバイス | カメラ種別 | `/dev/video0` の確認方法 |
+|---|---|---|
+| Raspberry Pi + Camera Module | CSI | `sudo modprobe bcm2835-v4l2` でV4L2有効化後に確認 |
+| Raspberry Pi + USBカメラ | USB | 接続後に自動認識 |
+| Jetson + USBカメラ | USB | 接続後に自動認識 |
+| Jetson + CSIカメラ | CSI | JetPackのV4L2ドライバで自動認識 |
+
+CSIカメラを複数接続している場合は `CAMERA_INDEX` 環境変数でインデックスを指定してください。
+
 ## イメージの更新
 
 GHCRに新しいイメージがpushされた場合は、VM上で以下を実行してください：
