@@ -24,4 +24,15 @@ cleanup() {
 }
 cleanup &
 
-exec uftpd -D "$DEST_DIR" -L "$LOG_FILE" -p "$PORT"
+# uftpd always daemonizes (forks to background), so we can't use exec directly.
+# Start it, then stream its log to stdout and monitor the process.
+uftpd -D "$DEST_DIR" -L "$LOG_FILE" -p "$PORT"
+
+tail -f "$LOG_FILE" &
+
+# Exit with failure when uftpd dies so systemd Restart=on-failure triggers.
+while pgrep -x uftpd > /dev/null; do
+    sleep 5
+done
+echo "uftpd exited unexpectedly" >&2
+exit 1
