@@ -229,4 +229,5 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | client | `UFTP_SERVER` | — | receiverのIPアドレス |
 | client | `FPS` | `2` | キャプチャフレームレート |
 | client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
-| client | `UFTP_OPTS` | — | 追加のUFTPオプション（デフォルト: `-q -s 2 -r 0.05`が自動適用） |
+| client | `UFTP_RECEIVER_ID` | — | receiverのUID（**必須**）。uftpdの内部IPから計算される（外部IPとは異なる）。GCE内部IP `10.146.0.2` の場合は `0x0A920002` |
+| client | `UFTP_OPTS` | — | 追加のUFTPオプション |
