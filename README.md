@@ -229,5 +229,29 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | client | `UFTP_SERVER` | — | receiverのIPアドレス |
 | client | `FPS` | `2` | キャプチャフレームレート |
 | client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
-| client | `UFTP_RECEIVER_ID` | — | receiverのUID（**必須**）。uftpdの内部IPから計算される（外部IPとは異なる）。GCE内部IP `10.146.0.2` の場合は `0x0A920002` |
+| client | `UFTP_RECEIVER_ID` | — | receiverのUID（**必須**）。内部IPから計算される（外部IPとは異なる）。求め方は下記参照 |
 | client | `UFTP_OPTS` | — | 追加のUFTPオプション |
+
+### UFTP_RECEIVER_ID の求め方
+
+uftpdのUIDはGCE VMの**内部IP**を16進変換した値です（外部IPとは異なります）。
+
+```bash
+# GCE VMの内部IPから自動計算
+printf '0x%02X%02X%02X%02X\n' $(gcloud compute instances describe uftp-fpv-server \
+  --zone=asia-northeast1-b \
+  --format='get(networkInterfaces[0].networkIP)' | tr '.' ' ')
+```
+
+内部IPが分かっている場合は直接変換できます：
+
+```bash
+# 例: 10.146.0.2 → 0x0A920002
+printf '0x%02X%02X%02X%02X\n' $(echo <内部IP> | tr '.' ' ')
+```
+
+求めた値を `uftp-fpv-client.container` に設定してください：
+
+```ini
+Environment=UFTP_RECEIVER_ID=0x0A920002
+```
