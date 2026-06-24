@@ -10,7 +10,9 @@ IMAGE_DIR = '/tmp/capture'
 UFTP_SERVER = os.environ.get('UFTP_SERVER', '192.168.1.100')
 FPS = float(os.environ.get('FPS', '1'))
 CAMERA_INDEX = int(os.environ.get('CAMERA_INDEX', '0'))
-JPEG_QUALITY = int(os.environ.get('JPEG_QUALITY', '85'))
+JPEG_QUALITY  = int(os.environ.get('JPEG_QUALITY', '85'))
+CAPTURE_WIDTH  = int(os.environ.get('CAPTURE_WIDTH', '0'))   # 0 = camera default
+CAPTURE_HEIGHT = int(os.environ.get('CAPTURE_HEIGHT', '0'))  # 0 = camera default
 UFTP_RECEIVER_ID = os.environ.get('UFTP_RECEIVER_ID', '')
 UFTP_SENDER_ID   = os.environ.get('UFTP_SENDER_ID', '')
 UFTP_RATE        = os.environ.get('UFTP_RATE', '')   # Kbps; unset = uftp default
@@ -42,7 +44,14 @@ def main():
         print(f'Cannot open camera index {CAMERA_INDEX}', file=sys.stderr)
         sys.exit(1)
 
-    print(f'Camera opened. Sending to {UFTP_SERVER} at {FPS} FPS', flush=True)
+    if CAPTURE_WIDTH and CAPTURE_HEIGHT:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAPTURE_WIDTH)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAPTURE_HEIGHT)
+
+    actual_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    actual_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(f'Camera opened. Resolution: {actual_w}x{actual_h}, '
+          f'Sending to {UFTP_SERVER} at {FPS} FPS', flush=True)
     interval = 1.0 / FPS
 
     while True:

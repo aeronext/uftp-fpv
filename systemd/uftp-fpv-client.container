@@ -22,6 +22,9 @@ Environment=UFTP_SERVER=192.168.1.100
 Environment=FPS=2
 Environment=CAMERA_INDEX=0
 Environment=JPEG_QUALITY=80
+# キャプチャ解像度（未設定はカメラのデフォルト解像度）
+# Environment=CAPTURE_WIDTH=1280
+# Environment=CAPTURE_HEIGHT=720
 # receiverのUIDを指定（必須）
 # uftpdの内部IPから計算される（外部IPとは異なる）
 # 求め方: printf '0x%02X%02X%02X%02X\n' $(echo <GCE内部IP> | tr '.' ' ')

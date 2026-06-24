@@ -231,6 +231,8 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
 | client | `UFTP_RECEIVER_ID` | — | receiverのUID（**必須**）。GCE内部IPから計算される（外部IPとは異なる）。求め方は下記参照 |
 | client | `UFTP_SENDER_ID` | — | 送信側UID（**推奨**）。未設定だとコンテナ再起動のたびにUIDが変わる。ラズパイのIPから計算して固定する |
+| client | `CAPTURE_WIDTH` | カメラデフォルト | キャプチャ解像度の幅（px）。`CAPTURE_HEIGHT` と両方設定した場合のみ有効 |
+| client | `CAPTURE_HEIGHT` | カメラデフォルト | キャプチャ解像度の高さ（px）。`CAPTURE_WIDTH` と両方設定した場合のみ有効 |
 | client | `UFTP_RATE` | — | 転送レート上限（Kbps）。未設定はuftpデフォルト（約1000Kbps） |
 | client | `UFTP_OPTS` | — | 追加のUFTPオプション |
 
