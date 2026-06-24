@@ -161,7 +161,7 @@
 
   <script>
     let updateCount = 0;
-    let currentFile = {{ ("'" + latest.filename + "'") if latest else "null" }};
+    let currentFile = {{ (latest.filename | tojson) if latest else "null" }};
 
     function showImage(filename, display) {
       const img = document.getElementById('main-img');
