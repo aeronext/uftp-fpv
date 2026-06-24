@@ -54,7 +54,7 @@ gcloud compute firewall-rules create allow-uftp \
   --description="UFTPレシーバー"
 ```
 
-### 3. PodmanのインストールI
+### 3. Podmanのインストール
 
 ```bash
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b \
@@ -85,8 +85,9 @@ gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
 
   sudo systemctl daemon-reload
 
-  sudo systemctl enable --now uftp-fpv-receiver
-  sudo systemctl enable --now uftp-fpv-web
+  # Quadlet生成ユニットはenableではなくstartで起動（自動起動はQuadletが管理）
+  sudo systemctl start uftp-fpv-receiver
+  sudo systemctl start uftp-fpv-web
 "
 ```
 
