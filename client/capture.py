@@ -11,8 +11,10 @@ UFTP_SERVER = os.environ.get('UFTP_SERVER', '192.168.1.100')
 FPS = float(os.environ.get('FPS', '1'))
 CAMERA_INDEX = int(os.environ.get('CAMERA_INDEX', '0'))
 JPEG_QUALITY = int(os.environ.get('JPEG_QUALITY', '85'))
-# e.g. "-E 101 -l" for encryption/logging
-UFTP_EXTRA_OPTS = os.environ.get('UFTP_OPTS', '').split() if os.environ.get('UFTP_OPTS') else []
+# -q: quick start  -s 2: retransmissions  -r 0.05: response wait (sec)
+_DEFAULT_UFTP_OPTS = ['-q', '-s', '2', '-r', '0.05']
+_uftp_opts_env = os.environ.get('UFTP_OPTS', '')
+UFTP_EXTRA_OPTS = _DEFAULT_UFTP_OPTS + (_uftp_opts_env.split() if _uftp_opts_env else [])
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 

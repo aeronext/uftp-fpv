@@ -22,7 +22,9 @@ Environment=UFTP_SERVER=192.168.1.100
 Environment=FPS=2
 Environment=CAMERA_INDEX=0
 Environment=JPEG_QUALITY=80
-# Environment=UFTP_OPTS=-E 101   # uncomment to enable UFTP encryption
+# デフォルトで -q -s 2 -r 0.05 が適用される（quick start・再送2回・応答待ち0.05秒）
+# 追加オプションを指定する場合のみ以下を有効化（デフォルトに追加される）
+# Environment=UFTP_OPTS=-E 101   # 暗号化を有効にする場合
 
 # Restart on failure, not on success (i.e. SIGTERM on stop is intentional)
 [Service]

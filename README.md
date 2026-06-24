@@ -229,3 +229,4 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | client | `UFTP_SERVER` | — | receiverのIPアドレス |
 | client | `FPS` | `2` | キャプチャフレームレート |
 | client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
+| client | `UFTP_OPTS` | — | 追加のUFTPオプション（デフォルト: `-q -s 2 -r 0.05`が自動適用） |
