@@ -12,11 +12,10 @@ FPS = float(os.environ.get('FPS', '1'))
 CAMERA_INDEX = int(os.environ.get('CAMERA_INDEX', '0'))
 JPEG_QUALITY = int(os.environ.get('JPEG_QUALITY', '85'))
 UFTP_RECEIVER_ID = os.environ.get('UFTP_RECEIVER_ID', '')
-_base_opts = ['-q']
-if UFTP_RECEIVER_ID:
-    _base_opts += ['-H', UFTP_RECEIVER_ID]
+# -H: UFTP_RECEIVER_ID（16進UID）が設定されていればそれを、なければサーバーIPを使用
+_h_target = UFTP_RECEIVER_ID if UFTP_RECEIVER_ID else UFTP_SERVER
 _uftp_opts_env = os.environ.get('UFTP_OPTS', '')
-UFTP_EXTRA_OPTS = _base_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
+UFTP_EXTRA_OPTS = ['-q', '-H', _h_target] + (_uftp_opts_env.split() if _uftp_opts_env else [])
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
