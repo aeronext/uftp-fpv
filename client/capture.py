@@ -20,7 +20,7 @@ os.makedirs(IMAGE_DIR, exist_ok=True)
 
 
 def send_via_uftp(filepath: str) -> bool:
-    cmd = ['uftp'] + UFTP_EXTRA_OPTS + ['-D', UFTP_SERVER, filepath]
+    cmd = ['uftp'] + UFTP_EXTRA_OPTS + ['-M', UFTP_SERVER, '-D', UFTP_SERVER, filepath]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
     if result.returncode != 0:
         print(f'[uftp error] {result.stderr.strip()}', file=sys.stderr)
