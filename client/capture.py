@@ -12,13 +12,15 @@ FPS = float(os.environ.get('FPS', '1'))
 CAMERA_INDEX = int(os.environ.get('CAMERA_INDEX', '0'))
 JPEG_QUALITY = int(os.environ.get('JPEG_QUALITY', '85'))
 UFTP_RECEIVER_ID = os.environ.get('UFTP_RECEIVER_ID', '')
+UFTP_SENDER_ID   = os.environ.get('UFTP_SENDER_ID', '')
 if not UFTP_RECEIVER_ID:
     print('WARNING: UFTP_RECEIVER_ID is not set. '
           'Run "sudo journalctl -u uftp-fpv-receiver | grep UID" on the server '
           'to find the receiver UID (e.g. 0x0A920002).', file=sys.stderr)
 _uftp_opts_env = os.environ.get('UFTP_OPTS', '')
 _h_opts = ['-H', UFTP_RECEIVER_ID] if UFTP_RECEIVER_ID else []
-UFTP_EXTRA_OPTS = ['-q'] + _h_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
+_u_opts = ['-U', UFTP_SENDER_ID]   if UFTP_SENDER_ID   else []
+UFTP_EXTRA_OPTS = ['-q'] + _h_opts + _u_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 

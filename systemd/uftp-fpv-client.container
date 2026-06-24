@@ -23,11 +23,13 @@ Environment=FPS=2
 Environment=CAMERA_INDEX=0
 Environment=JPEG_QUALITY=80
 # receiverのUIDを指定（必須）
-# UIDはuftpdの内部IPから計算される（外部IPとは異なる）
-# GCE VMの内部IP 10.146.0.2 の場合 → 0x0A920002
-# 確認方法: sudo journalctl -u uftp-fpv-receiver | grep -i uid
-# または動作確認済みコマンドの -H の値をそのまま使用する
+# uftpdの内部IPから計算される（外部IPとは異なる）
+# 求め方: printf '0x%02X%02X%02X%02X\n' $(echo <GCE内部IP> | tr '.' ' ')
 Environment=UFTP_RECEIVER_ID=0x0A920002
+# 送信側のUIDを固定（推奨）: コンテナ再起動のたびにUIDが変わるのを防ぐ
+# 任意の8桁16進数を設定する（例: ラズパイのIPから計算 192.168.1.10 → 0xC0A8010A）
+# printf '0x%02X%02X%02X%02X\n' $(echo <ラズパイのIP> | tr '.' ' ')
+Environment=UFTP_SENDER_ID=0xC0A8010A
 # 追加のUFTPオプション（デフォルトは -q のみ）
 # Environment=UFTP_OPTS=-E 101   # 暗号化を有効にする場合
 

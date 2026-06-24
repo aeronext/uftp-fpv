@@ -229,7 +229,8 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | client | `UFTP_SERVER` | — | receiverのIPアドレス |
 | client | `FPS` | `2` | キャプチャフレームレート |
 | client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
-| client | `UFTP_RECEIVER_ID` | — | receiverのUID（**必須**）。内部IPから計算される（外部IPとは異なる）。求め方は下記参照 |
+| client | `UFTP_RECEIVER_ID` | — | receiverのUID（**必須**）。GCE内部IPから計算される（外部IPとは異なる）。求め方は下記参照 |
+| client | `UFTP_SENDER_ID` | — | 送信側UID（**推奨**）。未設定だとコンテナ再起動のたびにUIDが変わる。ラズパイのIPから計算して固定する |
 | client | `UFTP_OPTS` | — | 追加のUFTPオプション |
 
 ### UFTP_RECEIVER_ID の求め方
@@ -254,4 +255,18 @@ printf '0x%02X%02X%02X%02X\n' $(echo <内部IP> | tr '.' ' ')
 
 ```ini
 Environment=UFTP_RECEIVER_ID=0x0A920002
+```
+
+### UFTP_SENDER_ID の求め方
+
+送信側（ラズパイ/Jetson）のUIDを固定しないと、コンテナ再起動のたびにUIDが変わります。
+ラズパイのIPアドレスを16進変換して固定値として使用してください：
+
+```bash
+# 例: ラズパイのIPが 192.168.1.10 の場合 → 0xC0A8010A
+printf '0x%02X%02X%02X%02X\n' $(echo <ラズパイのIP> | tr '.' ' ')
+```
+
+```ini
+Environment=UFTP_SENDER_ID=0xC0A8010A
 ```
