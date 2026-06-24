@@ -22,8 +22,10 @@ Environment=UFTP_SERVER=192.168.1.100
 Environment=FPS=2
 Environment=CAMERA_INDEX=0
 Environment=JPEG_QUALITY=80
-# デフォルトで -q -r 0.05 が適用される（quick start・応答待ち0.05秒）
-# 追加オプションを指定する場合のみ以下を有効化（デフォルトに追加される）
+# receiverのUID（16進数）を指定すると -H で直接送信（推奨）
+# UIDはサーバー側で確認: sudo journalctl -u uftp-fpv-receiver | grep "UID\|uid"
+# Environment=UFTP_RECEIVER_ID=0x0A920002
+# 追加のUFTPオプション（デフォルトは -q のみ）
 # Environment=UFTP_OPTS=-E 101   # 暗号化を有効にする場合
 
 # Restart on failure, not on success (i.e. SIGTERM on stop is intentional)
