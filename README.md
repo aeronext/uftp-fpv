@@ -1,34 +1,34 @@
-# UFTP FPV Camera System
+# UFTP FPV カメラシステム
 
-3-container system that streams FPV camera frames from a drone to a web viewer via UFTP.
+ドローンのカメラ映像をUFTP経由でWebビューアに転送する3コンテナ構成のシステムです。
 
 ```
-[drone / client]  --UFTP UDP--> [receiver]  --shared volume--> [web-viewer]
+[ドローン / client]  --UFTP UDP--> [receiver]  --共有ボリューム--> [web-viewer]
 ```
 
-## Containers
+## コンテナ構成
 
-| Container | Image | Role |
+| コンテナ | イメージ | 役割 |
 |---|---|---|
-| `uftp-fpv-client` | `ghcr.io/aeronext/uftp-fpv-client` | Captures camera frames and sends via UFTP |
-| `uftp-fpv-receiver` | `ghcr.io/aeronext/uftp-fpv-receiver` | Receives frames over UDP and writes to shared volume |
-| `uftp-fpv-web` | `ghcr.io/aeronext/uftp-fpv-web` | Flask web viewer serving latest frame at `:5000` |
+| `uftp-fpv-client` | `ghcr.io/aeronext/uftp-fpv-client` | カメラフレームをキャプチャしてUFTP送信 |
+| `uftp-fpv-receiver` | `ghcr.io/aeronext/uftp-fpv-receiver` | UDPでフレームを受信して共有ボリュームに書き込み |
+| `uftp-fpv-web` | `ghcr.io/aeronext/uftp-fpv-web` | 最新フレームをWebで表示（`:5000`） |
 
-## Deploy to GCP (GCE + Podman Quadlet)
+## GCPへのデプロイ（GCE + Podman Quadlet）
 
-The receiver and web-viewer run on a GCE VM as systemd services managed by Podman Quadlet.
+receiverとweb-viewerはGCE VMでPodman Quadletによるsystemdサービスとして動作します。
 
-### Prerequisites
+### 前提条件
 
-- [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated
-- GCP project configured
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install) がインストール済みでログイン済みであること
+- GCPプロジェクトが設定済みであること
 
 ```bash
 gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 ```
 
-### 1. Create VM
+### 1. VMの作成
 
 ```bash
 gcloud compute instances create uftp-fpv-server \
@@ -40,30 +40,30 @@ gcloud compute instances create uftp-fpv-server \
   --tags=uftp-fpv
 ```
 
-### 2. Firewall rules
+### 2. ファイアウォールの設定
 
 ```bash
 gcloud compute firewall-rules create allow-fpv-web \
   --allow=tcp:5000 \
   --target-tags=uftp-fpv \
-  --description="FPV web viewer"
+  --description="FPV Webビューア"
 
 gcloud compute firewall-rules create allow-uftp \
   --allow=udp:1044 \
   --target-tags=uftp-fpv \
-  --description="UFTP receiver"
+  --description="UFTPレシーバー"
 ```
 
-### 3. Install Podman
+### 3. PodmanのインストールI
 
 ```bash
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b \
   --command="sudo apt-get update && sudo apt-get install -y podman"
 ```
 
-### 4. Copy Quadlet files
+### 4. Quadletファイルのコピー
 
-Run from the project root:
+プロジェクトルートから実行してください：
 
 ```bash
 gcloud compute scp \
@@ -74,7 +74,7 @@ gcloud compute scp \
   --zone=asia-northeast1-b
 ```
 
-### 5. Place files and start services
+### 5. ファイルを配置してサービスを起動
 
 ```bash
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
@@ -90,7 +90,7 @@ gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
 "
 ```
 
-### 6. Get external IP and verify
+### 6. 外部IPの確認とアクセス
 
 ```bash
 gcloud compute instances describe uftp-fpv-server \
@@ -98,31 +98,31 @@ gcloud compute instances describe uftp-fpv-server \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
 ```
 
-Open `http://<EXTERNAL_IP>:5000` in a browser.
+ブラウザで `http://<外部IP>:5000` を開くとWebビューアが表示されます。
 
-### Logs and troubleshooting
+### ログ確認・トラブルシュート
 
 ```bash
-# Service status
+# サービスの状態確認
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
   sudo systemctl status uftp-fpv-receiver
   sudo systemctl status uftp-fpv-web
 "
 
-# Follow logs
+# ログのリアルタイム確認
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
   sudo journalctl -u uftp-fpv-web -f
 "
 
-# Running containers
+# 実行中コンテナの確認
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
   sudo podman ps
 "
 ```
 
-## Updating images
+## イメージの更新
 
-When a new image is pushed to GHCR, pull and restart on the VM:
+GHCRに新しいイメージがpushされた場合は、VM上で以下を実行してください：
 
 ```bash
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
@@ -132,9 +132,9 @@ gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
 "
 ```
 
-## Local development (Podman Quadlet)
+## ローカル開発（Podman Quadlet）
 
-Copy the files from `systemd/` to `~/.config/containers/systemd/` for rootless operation:
+rootlessで動作させる場合は `~/.config/containers/systemd/` にファイルをコピーしてください：
 
 ```bash
 cp systemd/*.container systemd/*.volume ~/.config/containers/systemd/
@@ -142,16 +142,16 @@ systemctl --user daemon-reload
 systemctl --user start uftp-fpv-receiver uftp-fpv-web
 ```
 
-## Configuration
+## 環境変数
 
-| Service | Variable | Default | Description |
+| サービス | 変数名 | デフォルト値 | 説明 |
 |---|---|---|---|
-| receiver | `DEST_DIR` | `/data/images` | Directory to write received images |
-| receiver | `UFTP_PORT` | `1044` | UDP port to listen on |
-| receiver | `MAX_IMAGES` | `500` | Maximum images to retain |
-| web | `IMAGE_DIR` | `/data/images` | Directory to read images from |
-| web | `MAX_HISTORY` | `20` | Number of history thumbnails shown |
-| web | `PORT` | `5000` | HTTP port |
-| client | `UFTP_SERVER` | — | IP address of the receiver VM |
-| client | `FPS` | `2` | Capture frames per second |
-| client | `JPEG_QUALITY` | `80` | JPEG quality (1–100) |
+| receiver | `DEST_DIR` | `/data/images` | 受信画像の保存先ディレクトリ |
+| receiver | `UFTP_PORT` | `1044` | 待受UDPポート番号 |
+| receiver | `MAX_IMAGES` | `500` | 保持する画像の最大枚数 |
+| web | `IMAGE_DIR` | `/data/images` | 画像の読み込み元ディレクトリ |
+| web | `MAX_HISTORY` | `20` | 履歴サムネイルの表示枚数 |
+| web | `PORT` | `5000` | HTTPポート番号 |
+| client | `UFTP_SERVER` | — | receiverのIPアドレス |
+| client | `FPS` | `2` | キャプチャフレームレート |
+| client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
