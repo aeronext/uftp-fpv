@@ -4,15 +4,15 @@ import subprocess
 import time
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 IMAGE_DIR = '/tmp/capture'
 UFTP_SERVER = os.environ.get('UFTP_SERVER', '192.168.1.100')
 FPS = float(os.environ.get('FPS', '1'))
 CAMERA_INDEX = int(os.environ.get('CAMERA_INDEX', '0'))
 JPEG_QUALITY = int(os.environ.get('JPEG_QUALITY', '85'))
-# -q: quick start  -s 2: retransmissions  -r 0.05: response wait (sec)
-_DEFAULT_UFTP_OPTS = ['-q', '-s', '2', '-r', '0.05']
+# -q: quick start  -r 0.05: response wait (sec)
+_DEFAULT_UFTP_OPTS = ['-q', '-r', '0.05']
 _uftp_opts_env = os.environ.get('UFTP_OPTS', '')
 UFTP_EXTRA_OPTS = _DEFAULT_UFTP_OPTS + (_uftp_opts_env.split() if _uftp_opts_env else [])
 
@@ -47,7 +47,7 @@ def main():
             continue
 
         # Filename encodes UTC timestamp for chronological sorting
-        ts = datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')
+        ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
         filepath = os.path.join(IMAGE_DIR, f'camera_{ts}.jpg')
         cv2.imwrite(filepath, frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
 
