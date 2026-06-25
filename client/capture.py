@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import cv2
+import signal
 import subprocess
 import time
 import os
@@ -39,47 +40,60 @@ def send_via_uftp(filepath: str) -> bool:
 
 
 def main():
+    running = True
+
+    def _handle_sigterm(signum, frame_):
+        nonlocal running
+        print('SIGTERM received, shutting down...', flush=True)
+        running = False
+
+    signal.signal(signal.SIGTERM, _handle_sigterm)
+
     cap = cv2.VideoCapture(CAMERA_INDEX)
     if not cap.isOpened():
         print(f'Cannot open camera index {CAMERA_INDEX}', file=sys.stderr)
         sys.exit(1)
 
-    native_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    native_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    save_w = CAPTURE_WIDTH  or native_w
-    save_h = CAPTURE_HEIGHT or native_h
-    print(f'Camera opened. Native: {native_w}x{native_h}, '
-          f'Save: {save_w}x{save_h}, '
-          f'Sending to {UFTP_SERVER} at {FPS} FPS', flush=True)
-    interval = 1.0 / FPS
+    try:
+        native_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        native_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        save_w = CAPTURE_WIDTH  or native_w
+        save_h = CAPTURE_HEIGHT or native_h
+        print(f'Camera opened. Native: {native_w}x{native_h}, '
+              f'Save: {save_w}x{save_h}, '
+              f'Sending to {UFTP_SERVER} at {FPS} FPS', flush=True)
+        interval = 1.0 / FPS
 
-    while True:
-        loop_start = time.monotonic()
+        while running:
+            loop_start = time.monotonic()
 
-        ret, frame = cap.read()
-        if not ret:
-            print('Failed to read frame, retrying...', file=sys.stderr)
-            time.sleep(1)
-            continue
+            ret, frame = cap.read()
+            if not ret:
+                print('Failed to read frame, retrying...', file=sys.stderr)
+                time.sleep(1)
+                continue
 
-        if save_w != native_w or save_h != native_h:
-            frame = cv2.resize(frame, (save_w, save_h), interpolation=cv2.INTER_AREA)
+            if save_w != native_w or save_h != native_h:
+                frame = cv2.resize(frame, (save_w, save_h), interpolation=cv2.INTER_AREA)
 
-        # Filename encodes UTC timestamp for chronological sorting
-        ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
-        filepath = os.path.join(IMAGE_DIR, f'camera_{ts}.jpg')
-        cv2.imwrite(filepath, frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
+            # Filename encodes UTC timestamp for chronological sorting
+            ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
+            filepath = os.path.join(IMAGE_DIR, f'camera_{ts}.jpg')
+            cv2.imwrite(filepath, frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
 
-        ok = send_via_uftp(filepath)
-        print(f'[{"OK" if ok else "NG"}] {os.path.basename(filepath)}', flush=True)
+            ok = send_via_uftp(filepath)
+            print(f'[{"OK" if ok else "NG"}] {os.path.basename(filepath)}', flush=True)
 
-        try:
-            os.remove(filepath)
-        except OSError:
-            pass
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
 
-        elapsed = time.monotonic() - loop_start
-        time.sleep(max(0.0, interval - elapsed))
+            elapsed = time.monotonic() - loop_start
+            time.sleep(max(0.0, interval - elapsed))
+    finally:
+        cap.release()
+        print('Camera released.', flush=True)
 
 
 if __name__ == '__main__':
