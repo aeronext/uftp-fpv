@@ -17,10 +17,9 @@ Network=host
 # Shared named volume with the web viewer
 Volume=fpv-images.volume:/data/images:z
 
-Environment=DEST_DIR=/data/images
-Environment=UFTP_PORT=1044
-# Keep the 500 most recent images; older ones are pruned automatically
-Environment=MAX_IMAGES=500
+# 環境変数はファイルから読み込む
+# cp env/receiver.env /etc/uftp-fpv/receiver.env で配置後、内容を編集してください
+EnvironmentFile=/etc/uftp-fpv/receiver.env
 
 [Service]
 Restart=on-failure

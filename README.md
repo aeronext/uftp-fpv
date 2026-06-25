@@ -74,7 +74,19 @@ gcloud compute scp \
   --zone=asia-northeast1-b
 ```
 
-### 5. ファイルを配置してサービスを起動
+### 5. 環境変数ファイルを配置
+
+```bash
+gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
+  sudo mkdir -p /etc/uftp-fpv
+"
+gcloud compute scp env/receiver.env uftp-fpv-server:/tmp/ --zone=asia-northeast1-b
+gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
+  sudo mv /tmp/receiver.env /etc/uftp-fpv/receiver.env
+"
+```
+
+### 6. ファイルを配置してサービスを起動
 
 ```bash
 gcloud compute ssh uftp-fpv-server --zone=asia-northeast1-b --command="
@@ -150,21 +162,21 @@ curl -fsSL "https://download.opensuse.org/repositories/devel:/kubic:/libcontaine
 sudo apt-get update && sudo apt-get install -y podman
 ```
 
-### 2. Quadletファイルのコピー
+### 2. Quadletファイルと環境変数ファイルのコピー
 
 開発マシンのプロジェクトルートからデバイスにコピーします：
 
 ```bash
-scp systemd/uftp-fpv-client.container <user>@<device-ip>:/tmp/
+scp systemd/uftp-fpv-client.container env/client.env <user>@<device-ip>:/tmp/
 ```
 
-### 3. UFTP_SERVERを設定
-
-デバイス上でGCE VMの外部IPに書き換えます：
+### 3. 環境変数ファイルを編集して配置
 
 ```bash
-sudo sed -i 's/UFTP_SERVER=192.168.1.100/UFTP_SERVER=<GCE外部IP>/' \
-  /tmp/uftp-fpv-client.container
+# デバイス上で実行
+sudo mkdir -p /etc/uftp-fpv
+sudo mv /tmp/client.env /etc/uftp-fpv/client.env
+sudo nano /etc/uftp-fpv/client.env   # UFTP_SERVER, UFTP_RECEIVER_ID 等を設定
 ```
 
 ### 4. ファイルを配置してサービスを起動

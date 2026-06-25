@@ -17,26 +17,9 @@ AddDevice=/dev/video0
 # Network (host mode ensures UDP can reach the receiver directly)
 Network=host
 
-# Runtime settings — edit to match your environment
-Environment=UFTP_SERVER=192.168.1.100
-Environment=FPS=2
-Environment=CAMERA_INDEX=0
-Environment=JPEG_QUALITY=80
-# キャプチャ解像度（未設定はカメラのデフォルト解像度）
-# Environment=CAPTURE_WIDTH=1280
-# Environment=CAPTURE_HEIGHT=720
-# receiverのUIDを指定（必須）
-# uftpdの内部IPから計算される（外部IPとは異なる）
-# 求め方: printf '0x%02X%02X%02X%02X\n' $(echo <GCE内部IP> | tr '.' ' ')
-Environment=UFTP_RECEIVER_ID=0x0A920002
-# 送信側のUIDを固定（推奨）: コンテナ再起動のたびにUIDが変わるのを防ぐ
-# 任意の8桁16進数を設定する（例: ラズパイのIPから計算 192.168.1.10 → 0xC0A8010A）
-# printf '0x%02X%02X%02X%02X\n' $(echo <ラズパイのIP> | tr '.' ' ')
-Environment=UFTP_SENDER_ID=0xC0A8010A
-# 転送レート上限（Kbps）。未設定はuftpデフォルト（約1000Kbps）
-# Environment=UFTP_RATE=5000
-# 追加のUFTPオプション（デフォルトは -q のみ）
-# Environment=UFTP_OPTS=-E 101   # 暗号化を有効にする場合
+# 環境変数はファイルから読み込む
+# cp env/client.env /etc/uftp-fpv/client.env で配置後、内容を編集してください
+EnvironmentFile=/etc/uftp-fpv/client.env
 
 # Restart on failure, not on success (i.e. SIGTERM on stop is intentional)
 [Service]
