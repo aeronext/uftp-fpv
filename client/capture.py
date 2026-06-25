@@ -7,7 +7,7 @@ import os
 import sys
 from datetime import datetime, timezone
 
-IMAGE_DIR = '/tmp/capture'
+IMAGE_DIR = os.environ.get('IMAGE_DIR', '/dev/shm/capture')
 UFTP_SERVER = os.environ.get('UFTP_SERVER', '192.168.1.100')
 FPS = float(os.environ.get('FPS', '1'))
 CAMERA_INDEX = int(os.environ.get('CAMERA_INDEX', '0'))

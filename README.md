@@ -226,6 +226,7 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | web | `IMAGE_DIR` | `/data/images` | 画像の読み込み元ディレクトリ |
 | web | `MAX_HISTORY` | `20` | 履歴サムネイルの表示枚数 |
 | web | `PORT` | `5000` | HTTPポート番号 |
+| client | `IMAGE_DIR` | `/dev/shm/capture` | 送信前の一時保存ディレクトリ（デフォルトはtmpfs） |
 | client | `UFTP_SERVER` | — | receiverのIPアドレス |
 | client | `FPS` | `2` | キャプチャフレームレート |
 | client | `JPEG_QUALITY` | `80` | JPEG品質（1〜100） |
