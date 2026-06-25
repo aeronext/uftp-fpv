@@ -25,7 +25,7 @@ _uftp_opts_env = os.environ.get('UFTP_OPTS', '')
 _h_opts = ['-H', UFTP_RECEIVER_ID] if UFTP_RECEIVER_ID else []
 _u_opts = ['-U', UFTP_SENDER_ID]   if UFTP_SENDER_ID   else []
 _r_opts = ['-R', UFTP_RATE]        if UFTP_RATE        else []
-UFTP_EXTRA_OPTS = ['-q'] + _h_opts + _u_opts + _r_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
+UFTP_EXTRA_OPTS = ['-q', '-r', '0.05'] + _h_opts + _u_opts + _r_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
