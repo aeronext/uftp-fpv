@@ -193,6 +193,11 @@
                 img.alt = 'Latest frame';
                 card.insertBefore(img, card.querySelector('.meta'));
               }
+              img.onerror = () => {
+                setTimeout(() => {
+                  img.src = '/images/' + currentFile + '?t=' + Date.now();
+                }, 1000);
+              };
               img.src = '/images/' + data.filename + '?t=' + Date.now();
               currentFile = data.filename;
             }

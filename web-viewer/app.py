@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import re
+import time
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, render_template, send_from_directory
@@ -31,12 +32,27 @@ def _parse_file(name: str) -> dict | None:
     }
 
 
+_SETTLE_SECS = 2  # uftpd書き込み完了を待つ猶予時間
+
 def list_images() -> list[dict]:
     try:
         names = os.listdir(IMAGE_DIR)
     except FileNotFoundError:
         return []
-    parsed = [p for n in names if (p := _parse_file(n)) is not None]
+    now = time.time()
+    parsed = []
+    for n in names:
+        p = _parse_file(n)
+        if p is None:
+            continue
+        try:
+            st = os.stat(os.path.join(IMAGE_DIR, n))
+        except OSError:
+            continue
+        # サイズ0 または直近 _SETTLE_SECS 秒以内に更新されたファイルは除外
+        if st.st_size == 0 or (now - st.st_mtime) < _SETTLE_SECS:
+            continue
+        parsed.append(p)
     parsed.sort(key=lambda x: x['dt'], reverse=True)
     return parsed
 
