@@ -246,7 +246,9 @@ systemctl --user start uftp-fpv-receiver uftp-fpv-web
 | client | `UFTP_SENDER_ID` | — | 送信側UID（**推奨**）。未設定だとコンテナ再起動のたびにUIDが変わる。ラズパイのIPから計算して固定する |
 | client | `CAPTURE_WIDTH` | カメラ実解像度 | 保存時のリサイズ幅（px）。`CAPTURE_HEIGHT` と両方設定した場合のみリサイズ |
 | client | `CAPTURE_HEIGHT` | カメラ実解像度 | 保存時のリサイズ高さ（px）。`CAPTURE_WIDTH` と両方設定した場合のみリサイズ |
-| client | `UFTP_RATE` | — | 転送レート上限（Kbps）。未設定はuftpデフォルト（約1000Kbps） |
+| client | `UFTP_RATE` | — | 転送レート上限（Kbps）。イリジウム想定値: `12` |
+| client | `UFTP_RESPONSE_WAIT` | `8.0` | uftp応答待ち時間（秒）。イリジウムのRTT（2〜5秒）に合わせて設定 |
+| client | `UFTP_TIMEOUT` | `120` | uftp subprocessタイムアウト（秒） |
 | client | `UFTP_OPTS` | — | 追加のUFTPオプション |
 
 ### UFTP_RECEIVER_ID の求め方

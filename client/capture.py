@@ -16,7 +16,9 @@ CAPTURE_WIDTH  = int(os.environ.get('CAPTURE_WIDTH', '0'))   # 0 = camera defaul
 CAPTURE_HEIGHT = int(os.environ.get('CAPTURE_HEIGHT', '0'))  # 0 = camera default
 UFTP_RECEIVER_ID = os.environ.get('UFTP_RECEIVER_ID', '')
 UFTP_SENDER_ID   = os.environ.get('UFTP_SENDER_ID', '')
-UFTP_RATE        = os.environ.get('UFTP_RATE', '')   # Kbps; unset = uftp default
+UFTP_RATE          = os.environ.get('UFTP_RATE', '')      # Kbps; unset = uftp default
+UFTP_RESPONSE_WAIT = os.environ.get('UFTP_RESPONSE_WAIT', '8.0')  # 秒; Iridium RTT考慮
+UFTP_TIMEOUT       = int(os.environ.get('UFTP_TIMEOUT', '120'))    # subprocess timeout(秒)
 if not UFTP_RECEIVER_ID:
     print('WARNING: UFTP_RECEIVER_ID is not set. '
           'Run "sudo journalctl -u uftp-fpv-receiver | grep UID" on the server '
@@ -25,14 +27,14 @@ _uftp_opts_env = os.environ.get('UFTP_OPTS', '')
 _h_opts = ['-H', UFTP_RECEIVER_ID] if UFTP_RECEIVER_ID else []
 _u_opts = ['-U', UFTP_SENDER_ID]   if UFTP_SENDER_ID   else []
 _r_opts = ['-R', UFTP_RATE]        if UFTP_RATE        else []
-UFTP_EXTRA_OPTS = ['-q', '-r', '0.05'] + _h_opts + _u_opts + _r_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
+UFTP_EXTRA_OPTS = ['-q', '-r', UFTP_RESPONSE_WAIT] + _h_opts + _u_opts + _r_opts + (_uftp_opts_env.split() if _uftp_opts_env else [])
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
 
 def send_via_uftp(filepath: str) -> bool:
     cmd = ['uftp'] + UFTP_EXTRA_OPTS + ['-M', UFTP_SERVER, filepath]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=UFTP_TIMEOUT)
     if result.returncode != 0:
         print(f'[uftp error] {result.stderr.strip()}', file=sys.stderr)
         return False
