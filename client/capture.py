@@ -76,10 +76,18 @@ def main():
             if save_w != native_w or save_h != native_h:
                 frame = cv2.resize(frame, (save_w, save_h), interpolation=cv2.INTER_AREA)
 
+            ok_enc, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
+            if not ok_enc:
+                print('Failed to encode frame, skipping.', file=sys.stderr)
+                continue
+
             # Filename encodes UTC timestamp for chronological sorting
             ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
             filepath = os.path.join(IMAGE_DIR, f'camera_{ts}.jpg')
-            cv2.imwrite(filepath, frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
+            with open(filepath, 'wb') as f:
+                f.write(buf.tobytes())
+                f.flush()
+                os.fsync(f.fileno())
 
             ok = send_via_uftp(filepath)
             print(f'[{"OK" if ok else "NG"}] {os.path.basename(filepath)}', flush=True)
